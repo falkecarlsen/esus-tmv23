@@ -4,6 +4,7 @@ Created on Tue Nov  1 16:10:44 2022
 
 @author: GQ05XY
 """
+from io import StringIO
 
 import requests
 import pandas as pd
@@ -11,24 +12,6 @@ import datetime as dt
 import json
 import os
 import time
-
-
-def fegtch(url: str, params: dict, username: str, password: str):
-    status_code = 0
-    tries = 0
-    while status_code != requests.status_codes.codes.OK:
-        payload = requests.get(url, params=params, auth=(username, password))
-        status_code = payload.status_code
-
-        if tries > 5:
-            print(f"Error in fetching from API. Status code: {status_code}. Tried {tries} times. Bailing out.")
-            return None
-
-        if status_code != 200:
-            print(f"Error in fetching from API. Status code: {status_code}. Retrying in {5 * tries} seconds")
-            time.sleep(5 * tries)
-            tries += 1
-
 
 DEBUG_API = True
 
@@ -50,6 +33,26 @@ if not USERNAME:
     USERNAME = os.environ.get("SE_API_USERNAME")
 if not PASSWORD:
     PASSWORD = os.environ.get("SE_API_PASSWORD")
+
+
+def fetch(url: str, params: dict, username: str, password: str) -> requests.Response | None:
+    status_code = 0
+    tries = 0
+    while status_code != requests.status_codes.codes.OK:
+        payload = requests.get(url, params=params, auth=(username, password))
+        status_code = payload.status_code
+
+        if tries > 5:
+            print(f"Error in fetching from API. Status code: {status_code}. Tried {tries} times. Bailing out.")
+            return None
+
+        elif status_code != 200:
+            print(f"Error in fetching from API. Status code: {status_code}. Retrying in {5 * tries} seconds")
+            time.sleep(5 * tries)
+            tries += 1
+
+        else:
+            return payload
 
 
 ###############################
@@ -121,6 +124,10 @@ logmap_var_loc = "Log_variable_location"
 # Fill in the name of the column containing the name of the log variable as a string, e.g. 'Logged_variable_name'
 logmap_var_name = "Logged_variable_name"
 
+
+# print configuration status line
+print(f"Configuration: {save_file_type=}, {save_location=}, {RUN=}, {start=}, {end=}, {identifier=}, {readability=}")
+
 #########################
 ##     Script below    ##
 ##     Do not touch!   ##
@@ -133,7 +140,7 @@ if identifier == 1:
 
 elif identifier == 2:
     source = source_string  # create the source from source_string
-    trend_meta = requests.get(url=METADATA_NAME, auth=(USERNAME, PASSWORD))
+    trend_meta = fetch(url=METADATA_NAME, params={}, username=USERNAME, password=PASSWORD)
     trend_meta_text = trend_meta.text
     trend_meta_df = pd.read_json(trend_meta_text, orient="records")  # extract the trend_meta data from the DB
     externallogid = trend_meta_df.externallogid[
@@ -152,15 +159,9 @@ elif identifier == 3:
             [str(source_df[logmap_var_loc][i]), str(source_df[logmap_var_name][i])]
         )  # create a full path with variable name for each variable
         source.append(temp)  # append the full path of each variable to this list, to get a full list of variable paths
-    trend_meta = requests.get(
-        url=METADATA_NAME, auth=(USERNAME, PASSWORD)
-    )  # extract the trend_meta data as a dataframe
-    if trend_meta.status_code != 200:
-        print("Error in fetching BMS SOURCE API")
-        exit()
+    trend_meta = fetch(url=METADATA_NAME, params={}, username=USERNAME, password=PASSWORD)
 
-    trend_meta_text = trend_meta.text
-    trend_meta_df = pd.read_json(trend_meta_text, orient="records")
+    trend_meta_df = pd.read_json(StringIO(trend_meta.text), orient="records")
     externallogid = []
     temp_externallogid = []
     for i in range(0, len(source_df)):
@@ -199,21 +200,6 @@ if DEBUG_API:
 
     print(f"Failed externallogid(s): {failed_external_logid}")
 
-
-status_code = 0
-tries = 0
-while status_code != 200:
-    trend_data = requests.get(TRENDDATA_NAME, params=PARAMS, auth=(USERNAME, PASSWORD))
-    status_code = trend_data.status_code
-
-    if tries > 5:
-        print(f"Error in fetching BMS TREND API. Status code: {status_code}. Tried {tries} times. Exiting")
-        exit(1)
-
-    if status_code != 200:
-        print(f"Error in fetching BMS TREND API. Status code: {status_code}. Retrying in {5 * tries} seconds")
-        time.sleep(5 * tries)
-        tries += 1
 
 # extract the trend_data for each externallogid in the timespan between starttime and endtime
 trend_data_text = trend_data.text
