@@ -4,6 +4,7 @@ Created on Tue Nov  1 16:10:44 2022
 
 @author: GQ05XY
 """
+from datetime import datetime
 from io import StringIO
 
 import requests
@@ -13,10 +14,12 @@ import json
 import os
 import time
 
-DEBUG_API = True
+DEBUG_API = False
+
+time_start = datetime.now()
 
 # name for export
-RUN = "test"
+RUN = "TMV23"
 
 pd.set_option("display.max_colwidth", None)
 ###############################
@@ -34,39 +37,35 @@ if not USERNAME:
 if not PASSWORD:
     PASSWORD = os.environ.get("SE_API_PASSWORD")
 
+# start time for the data extraction
 
-def fetch(url: str, params: dict, username: str, password: str) -> requests.Response | None:
+def fetch(
+    url: str, params: dict, username: str, password: str
+) -> requests.Response | None:
     status_code = 0
     tries = 0
     while status_code != requests.status_codes.codes.OK:
         payload = requests.get(url, params=params, auth=(username, password))
         status_code = payload.status_code
 
-        if tries > 5:
-            print(f"Error in fetching from API. Status code: {status_code}. Tried {tries} times. Bailing out.")
+        if tries > 3:
+            print(
+                f"Error in fetching from API. Status code: {status_code}. Tried {tries} times. Bailing out."
+            )
             return None
 
         elif status_code != 200:
-            print(f"Error in fetching from API. Status code: {status_code}. Retrying in {5 * tries} seconds")
+            print(
+                f"Error in fetching from API. Status code: {status_code}. Retrying in {5 * tries} seconds"
+            )
             time.sleep(5 * tries)
             tries += 1
 
         else:
             return payload
 
-
-###############################
-# Start and endtime for the dataextraction
-"""start_year = 2024
-start_month = 1
-start_day = 15
-start_hour = 8
-end_year = 2024
-end_month = 2
-end_day = 5
-end_hour = 9
-"""
 start = dt.datetime(2024, 1, 15, 8)
+#start = dt.datetime.now() - dt.timedelta(days=1)
 end = dt.datetime.now() - dt.timedelta(hours=1)
 
 # make datetimes and ensure ordering and duration is greater than 15 minutes
@@ -80,12 +79,14 @@ if (end - start).seconds < 15 * 60:
 save_location = "output"
 # Set the name of the data file as a string, e.g. 'test'
 # make timestamp from start and end datetimes in short readable format for filename
-save_file_name = f"{RUN}_{start.strftime('%Y%m%d_%H%M%S')}_{end.strftime('%Y%m%d_%H%M%S')}"
+save_file_name = (
+    f"{RUN}_{start.strftime('%Y%m%d_%H%M%S')}_{end.strftime('%Y%m%d_%H%M%S')}"
+)
 # Set the type that the data should be saved as, as a string
 # Option 1 : 'xlsx'
 # Option 2 : 'csv'
 # Option 3 : 'json'
-# Option 4 : feather
+# Option 4 : feather½
 save_file_type = "csv"
 # Should the file be human readable (larger file size) or only machine readable (smaller file size), only relevant for JSON format
 # Option 1 : Human readable, insert 1 tabs
@@ -126,7 +127,9 @@ logmap_var_name = "Logged_variable_name"
 
 
 # print configuration status line
-print(f"Configuration: {save_file_type=}, {save_location=}, {RUN=}, {start=}, {end=}, {identifier=}, {readability=}")
+print(
+    f"Configuration: {save_file_type=}, {save_location=}, {RUN=}, {start=}, {end=}, {identifier=}, {readability=}"
+)
 
 #########################
 ##     Script below    ##
@@ -135,14 +138,20 @@ print(f"Configuration: {save_file_type=}, {save_location=}, {RUN=}, {start=}, {e
 
 
 if identifier == 1:
-    externallogid = externallogid_list  # create the list of externallogid from externallogid_list
+    externallogid = (
+        externallogid_list  # create the list of externallogid from externallogid_list
+    )
 
 
 elif identifier == 2:
     source = source_string  # create the source from source_string
-    trend_meta = fetch(url=METADATA_NAME, params={}, username=USERNAME, password=PASSWORD)
+    trend_meta = fetch(
+        url=METADATA_NAME, params={}, username=USERNAME, password=PASSWORD
+    )
     trend_meta_text = trend_meta.text
-    trend_meta_df = pd.read_json(trend_meta_text, orient="records")  # extract the trend_meta data from the DB
+    trend_meta_df = pd.read_json(
+        trend_meta_text, orient="records"
+    )  # extract the trend_meta data from the DB
     externallogid = trend_meta_df.externallogid[
         source == trend_meta_df.source
     ].tolist()  # find the correct externallogid based on the source and the trend_meta data
@@ -152,14 +161,20 @@ elif identifier == 2:
 
 elif identifier == 3:
     # create the source from the logmap, with the specified naming and location
-    source_df = pd.read_excel(io=source_logmap, sheet_name=logmap_sheet, header=0, usecols=logmap_columns)
+    source_df = pd.read_excel(
+        io=source_logmap, sheet_name=logmap_sheet, header=0, usecols=logmap_columns
+    )
     source = []
     for i in range(0, len(source_df)):
         temp = "/".join(
             [str(source_df[logmap_var_loc][i]), str(source_df[logmap_var_name][i])]
         )  # create a full path with variable name for each variable
-        source.append(temp)  # append the full path of each variable to this list, to get a full list of variable paths
-    trend_meta = fetch(url=METADATA_NAME, params={}, username=USERNAME, password=PASSWORD)
+        source.append(
+            temp
+        )  # append the full path of each variable to this list, to get a full list of variable paths
+    trend_meta = fetch(
+        url=METADATA_NAME, params={}, username=USERNAME, password=PASSWORD
+    )
 
     trend_meta_df = pd.read_json(StringIO(trend_meta.text), orient="records")
     externallogid = []
@@ -173,7 +188,7 @@ elif identifier == 3:
         )  # create a list of all externallogid
         if externallogid[-1] == []:
             print(
-                " ".join(["source_df index", str(source_df.index[i]), "failed"])
+                " ".join([f"source_df {source_df.index[i]=}, {source_df[logmap_var_name][i]=} failed"])
             )  # Print the index corresponding to source_df for each variable, which did not have a valid externallogid
             externallogid.pop()  # remove the invalid externallogid from the list of all valid externallogid
     source_df_insert_point = len(source_df.columns)
@@ -184,27 +199,37 @@ elif identifier == 3:
 
 # extract the trend_data
 PARAMS = {"starttime": start, "endtime": end, "externallogid": externallogid}
-
-if DEBUG_API:
+#trend_data = fetch(TRENDDATA_NAME, params=PARAMS, username=USERNAME, password=PASSWORD)
+trend_data = None
+# init empty json
+tmp_df = pd.DataFrame()
+trend_meta_df = None
+if DEBUG_API or trend_data is None:
     failed_external_logid = []
     for i in range(1, len(externallogid)):
         PARAMS["externallogid"] = externallogid[i]
-        trend_data = requests.get(TRENDDATA_NAME, params=PARAMS, auth=(USERNAME, PASSWORD))
+        trend_data = requests.get(
+            TRENDDATA_NAME, params=PARAMS, auth=(USERNAME, PASSWORD)
+        )
         if trend_data.status_code != 200:
             failed_external_logid.append(externallogid[i])
             print("x", end="")
             time.sleep(1)
         else:
+            new_df = pd.read_json(StringIO(trend_data.text), orient="records")
+            #print(new_df.size, end=" ")
+            tmp_df = pd.concat([tmp_df, new_df])
             print(".", end="")
+
     print(end="\n")
+    trend_data_df = tmp_df
+    if len(failed_external_logid) > 0:
+        print(f"Failed externallogid(s): {failed_external_logid}")
+else:
+    # extract the trend_data for each externallogid in the timespan between starttime and endtime
+    trend_data_df = pd.read_json(trend_data.text, orient="records")
 
-    print(f"Failed externallogid(s): {failed_external_logid}")
 
-
-# extract the trend_data for each externallogid in the timespan between starttime and endtime
-trend_data_text = trend_data.text
-
-trend_data_df = pd.read_json(trend_data_text, orient="records")
 
 print("Data extracted")
 
@@ -213,13 +238,21 @@ if identifier == 3:
 
     dfs = []
     for id_, id_df in trend_data_df.groupby("externallogid"):
-        temp_source = (source_df[source_df["externallogid"] == id_]["Log_variable_location"]).tolist()
-        temp_name = (source_df[source_df["externallogid"] == id_]["Logged_variable_name"]).tolist()
+        temp_source = (
+            source_df[source_df["externallogid"] == id_]["Log_variable_location"]
+        ).tolist()
+        temp_name = (
+            source_df[source_df["externallogid"] == id_]["Logged_variable_name"]
+        ).tolist()
 
         temp_source_name = "/".join(temp_source + temp_name)
 
         temp_s = pd.Series([temp_source_name] * len(id_df))
-        temp_df = pd.concat([id_df.reset_index(drop=True), temp_s.reset_index(drop=True)], ignore_index=True, axis=1)
+        temp_df = pd.concat(
+            [id_df.reset_index(drop=True), temp_s.reset_index(drop=True)],
+            ignore_index=True,
+            axis=1,
+        )
 
         dfs.append(temp_df)
 
@@ -248,3 +281,7 @@ elif save_file_type == "json":
     trend_data_output = trend_data_df.to_json(orient="table", indent=indentation)
     with open(save_file, "w", encoding="utf-8") as f:
         json.dump(trend_data_output, f, ensure_ascii=False, indent=indentation)
+
+
+time_end = datetime.now()
+print(f"Time to run: {time_end - time_start}")
