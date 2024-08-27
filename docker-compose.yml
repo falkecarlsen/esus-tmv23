@@ -1,0 +1,37 @@
+version: '3'
+
+networks:
+  monitoring:
+
+services:
+  influxdb:
+    image: influxdb:latest
+    ports:
+      - 8086:8086
+      - 80:8080
+    environment:
+      - INFLUXDB_DB=csv_data
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+    volumes:
+      - influxdb_data:/var/lib/influxdb  # Persist InfluxDB data
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana  # Persist Grafana data
+    networks:
+      - monitoring
+
+volumes:
+  grafana_data:
+  influxdb_data:
+

@@ -1,0 +1,5 @@
+paho-mqtt~=1.6.1
+requests~=2.31.0
+pandas~=2.1.1
+openpyxl~=3.0.7
+influxdb_client~=1.41.0
