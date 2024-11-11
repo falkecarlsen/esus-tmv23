@@ -5,6 +5,7 @@ networks:
 
 services:
   influxdb:
+    container_name: influxdb
     image: influxdb:latest
     ports:
       - 8086:8086
@@ -13,25 +14,33 @@ services:
       - INFLUXDB_DB=csv_data
       - INFLUXDB_ADMIN_USER=admin
       - INFLUXDB_ADMIN_PASSWORD=admin
+      - INFLUXDB_USER=user
+      - INFLUXDB_USER_PASSWORD=user
     volumes:
       - influxdb_data:/var/lib/influxdb  # Persist InfluxDB data
+    restart: unless-stopped
     networks:
       - monitoring
 
   grafana:
+    container_name: grafana
     image: grafana/grafana:latest
     ports:
-      - 3000:3000
+      - 3000:3000 # grafana web ui
     depends_on:
       - influxdb
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana_data:/var/lib/grafana  # Persist Grafana data
+    restart: unless-stopped
     networks:
       - monitoring
 
+
 volumes:
   grafana_data:
+    driver: local
   influxdb_data:
+    driver: local
 

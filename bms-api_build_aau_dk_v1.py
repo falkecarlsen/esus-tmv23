@@ -64,14 +64,14 @@ def fetch(
         else:
             return payload
 
-start = dt.datetime(2024, 1, 15, 8)
-#start = dt.datetime.now() - dt.timedelta(days=1)
+#start = dt.datetime(2024, 1, 15, 8)
 end = dt.datetime.now() - dt.timedelta(hours=1)
+start = end - dt.timedelta(days=1)
 
 # make datetimes and ensure ordering and duration is greater than 15 minutes
 if start > end:
     raise ValueError("Start time is after end time")
-if (end - start).seconds < 15 * 60:
+if (end - start).total_seconds() < 15 * 60:
     raise ValueError("Duration is less than 15 minutes")
 
 ###############################
@@ -204,6 +204,7 @@ trend_data = None
 # init empty json
 tmp_df = pd.DataFrame()
 trend_meta_df = None
+print(f"Extracting data, {len(externallogid)} externallogid(s) repr. by '.'")
 if DEBUG_API or trend_data is None:
     failed_external_logid = []
     for i in range(1, len(externallogid)):
@@ -219,7 +220,7 @@ if DEBUG_API or trend_data is None:
             new_df = pd.read_json(StringIO(trend_data.text), orient="records")
             #print(new_df.size, end=" ")
             tmp_df = pd.concat([tmp_df, new_df])
-            print(".", end="")
+            print(".", end="" if i % 10 != 0 else f" {len(externallogid) - i} left \n")
 
     print(end="\n")
     trend_data_df = tmp_df
