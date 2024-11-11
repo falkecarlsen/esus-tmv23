@@ -66,7 +66,7 @@ def fetch(
 
 #start = dt.datetime(2024, 1, 15, 8)
 end = dt.datetime.now() - dt.timedelta(hours=1)
-start = end - dt.timedelta(days=1)
+start = end - dt.timedelta(hours=1)
 
 # make datetimes and ensure ordering and duration is greater than 15 minutes
 if start > end:
@@ -204,7 +204,7 @@ trend_data = None
 # init empty json
 tmp_df = pd.DataFrame()
 trend_meta_df = None
-print(f"Extracting data, {len(externallogid)} externallogid(s) repr. by '.'")
+print(f"Extracting data, {len(externallogid)} externallogid(s) repr. by '.', failed repr. by 'x'")
 if DEBUG_API or trend_data is None:
     failed_external_logid = []
     for i in range(1, len(externallogid)):
