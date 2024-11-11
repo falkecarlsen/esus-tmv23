@@ -285,4 +285,5 @@ elif save_file_type == "json":
 
 
 time_end = datetime.now()
+print("Output saved to: ", save_file)
 print(f"Time to run: {time_end - time_start}")

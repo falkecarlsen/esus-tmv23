@@ -5,6 +5,21 @@ The goal is to synthesise control strategies (Imran papers) for a subset of the 
 Presumed savings are among others from utilising weather forecasts and preemptively lowering shades in morning on sunny days to save cooling costs on south-facing rooms. Currently, these shades are not tied into the main BMS and are only controlled by human interaction.
 
 
+# TODO:
+- Finalise `influx_db_adapter.py`
+    - Mapping of measurements are broken
+- Write wrapper around improved BMS API and influx_db_adapter
+- Provision Strato instance
+    - Setup docker
+    - Deploy InfluxDB+Grafana docker-compose
+    - Setup cronjob-ish wrapper to poll BMS API and ingest into InfluxDB
+    - Expose endpoints through Nginx for consumption
+
+# Performance
+- Reading from BMS API all measurements for one day takes ~1m20s
+- Writing transformed points to local InfluxDB instance takes 16s to precompute, and 13m14s (preliminary) to write to db.
+    - Extrapolating this means that we consume 1 time unit of computation per 100 time units monitored. Polling once every 15 minutes (0/15/30/45 minutes + epsilon) can expose measurements as soon as they're available.
+
 # Limitations
 - Shades are not digitally controllable (LK svagstrømstryk installed) without custom hardware. 
 - Main BMS (Schneider Electrics) is run on old bus which cannot handle much bandwidth. Limited to update frequency of ~5mins.

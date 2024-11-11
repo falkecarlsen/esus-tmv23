@@ -15,9 +15,9 @@ import pandas as pd
 Define credentials
 """
 url = "http://localhost:8086"
-token = "46x4U9VjX6FMluFpRh8Ukw5EeyRVgXevKyecLuMIRKyQiGPj5RLkkj5Ko75Nj70ptvcYTjJW1dcPdrLEt8ruZA=="
-org = "my-org"
-bucket = "tmv23-3"
+token = "token"
+org = "org"
+bucket = "db"
 
 
 def check_connection():
@@ -95,7 +95,7 @@ print(f"Time to read and pre-compute on dataframe: {time_computation - time_star
 
 def dataframe_to_influxdb_points(dataframe: pd.DataFrame):
     for _, row in dataframe.iterrows():
-        yield Point(row["source"]).field("value", row["value"]).time((row["timestamp"]))
+        yield Point(measurement_name=row["source"]).field("value", row["value"]).time((row["timestamp"]))
 
 
 with InfluxDBClient(url=url, token=token, org=org) as client:
