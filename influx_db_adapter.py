@@ -1,6 +1,7 @@
 """
 How to check that connection credentials are suitable for queries and writes from/into specified bucket.
 """
+import os
 from pprint import pprint
 
 import influxdb_client
@@ -10,14 +11,22 @@ from influxdb_client.rest import ApiException
 from influxdb_client import Point
 import pandas as pd
 
+from dotenv import load_dotenv
+load_dotenv()
 
-"""
-Define credentials
-"""
+
+from datetime import datetime
+
+from openpyxl.chart.series import Series
+
+time_start = datetime.now()
+
+# assume default port for InfluxDB
 url = "http://localhost:8086"
-token = "token"
-org = "org"
-bucket = "db"
+
+token = os.getenv('INFLUXDB_TOKEN')
+org = os.getenv('INFLUXDB_ORG')
+bucket = os.getenv('INFLUXDB_DATABASE')
 
 
 def check_connection():
@@ -68,12 +77,9 @@ with InfluxDBClient(url=url, token=token, org=org) as client:
 
 # done testing connection
 
-from datetime import datetime
-
-time_start = datetime.now()
 
 # read df
-df = pd.read_csv("output/TMV23_20241110_162750_20241111_162750.csv")
+df = pd.read_csv("output/TMV23_20240115_080000_20240402_115149.csv")
 # do datetime conversion for timestamp to align with Point time-format
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 
@@ -83,10 +89,16 @@ df.drop(columns="Unnamed: 0")
 # replace spaces in source with underscores
 df["source"] = df["source"].str.replace(" ", "_")
 
-# get mapping fixme: unused currently
-mapping = (
-    pd.read_csv("output/mapping.csv").set_index("externallogid").drop(columns="Unnamed: 0").to_dict("dict")["source"]
-)
+# get mapping
+mapping = pd.read_csv("output/mapping.csv").set_index("externallogid").drop(columns="Unnamed: 0")
+
+"""
+point construction should follow:
+Measurement name: room
+Tag: room_id, sensor_type
+Field: value, unit (opt)
+example: room,room_id=1.213,sensor_type=temperature value=22.5,unit="C"
+"""
 
 time_computation = datetime.now()
 
@@ -95,7 +107,17 @@ print(f"Time to read and pre-compute on dataframe: {time_computation - time_star
 
 def dataframe_to_influxdb_points(dataframe: pd.DataFrame):
     for _, row in dataframe.iterrows():
-        yield Point(measurement_name=row["source"]).field("value", row["value"]).time((row["timestamp"]))
+        map_externallogid: Series = mapping.loc[row["externallogid"]]
+        yield (
+            Point(measurement_name="metric")
+            .tag("source", row["source"])
+            .tag("room_id", map_externallogid.location)
+            .tag("sensor_type", map_externallogid.sensor_type)
+            .field("unit", map_externallogid.unit)
+            .field("value", row["value"])
+            .time((row["timestamp"]))
+        )
+        # yield Point(measurement_name=row["source"]).field("value", row["value"]).time((row["timestamp"]))
 
 
 with InfluxDBClient(url=url, token=token, org=org) as client:
@@ -108,20 +130,12 @@ with InfluxDBClient(url=url, token=token, org=org) as client:
             con.write(bucket, org, point)
             if i % step == 0:
                 print(".", end="")
-            if i % (step * 10) == 0:
-                print(f"\n{i / len(df):.3%} or {i}/{len(df)} points written")
+            if i % (step * 5) == 0:
+                print(f"\n{i / len(df):.3%} or {i}/{len(df)} points written, "
+                      f"time elapsed: {datetime.now() - time_computation}, "
+                      f"time left estimated: {(datetime.now() - time_computation) / i * (len(df) - i)}")
 
         time_write = datetime.now()
         print(f"\nTime to write: {time_write - time_computation}")
 
-    exit()
-    query = f'from(bucket: "{bucket}") |> range(start: -1h)'
-
-    # Query data from InfluxDB
-    tables = client.query_api().query(query, org=org)
-
-    # Process the result
-    for table in tables:
-        for record in table.records:
-            # Assuming record has fields and time
-            print(f"Time: {record.get_field()['_time']}, Fields: {record.get_field()}")
+print(f"Total time: {time_write - time_start}")
