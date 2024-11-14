@@ -79,7 +79,7 @@ with InfluxDBClient(url=url, token=token, org=org) as client:
 
 
 # read df
-df = pd.read_csv("output/TMV23_20240115_080000_20240402_115149.csv")
+df = pd.read_csv("output/tmv23-3days.csv")
 # do datetime conversion for timestamp to align with Point time-format
 df["timestamp"] = pd.to_datetime(df["timestamp"])
 
@@ -124,6 +124,7 @@ with InfluxDBClient(url=url, token=token, org=org) as client:
     # write points
     step = 100_000
     i = 0
+    print("Writing points")
     with client.write_api(write_options=WriteOptions(batch_size=10_000, flush_interval=1_000)) as con:
         for point in dataframe_to_influxdb_points(df):
             i += 1
