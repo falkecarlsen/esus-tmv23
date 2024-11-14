@@ -192,9 +192,9 @@ def api(start: datetime, end: datetime, output: str, run: str = "bms"):
     # init empty json
     tmp_df = pd.DataFrame()
     trend_meta_df = None
+    failed_external_logid = []
     print(f"Extracting data, {len(externallogid)} externallogid(s) repr. by '.', failed repr. by 'x'")
     if DEBUG_API or trend_data is None:
-        failed_external_logid = []
         for i in range(1, len(externallogid)):
             PARAMS["externallogid"] = externallogid[i]
             trend_data = requests.get(TRENDDATA_NAME, params=PARAMS, auth=(USERNAME, PASSWORD))
@@ -262,6 +262,7 @@ def api(start: datetime, end: datetime, output: str, run: str = "bms"):
     time_end = datetime.now()
     print("Output saved to: ", save_file)
     print(f"Time to run: {time_end - time_start}")
+    return failed_external_logid
 
 
 if __name__ == "__main__":
