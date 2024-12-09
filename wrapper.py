@@ -85,12 +85,16 @@ if __name__ == "__main__":
 
 
             # import resulting fetch into influxdb
-            ingest(fetch_res, mapping)
+            if fetch_res is not None and not fetch_res.empty:
+                ingest(fetch_res, mapping)
+            else:
+                print(f"[{fetch_time}] WARN: No new data to ingest", file=sys.stderr)
 
 
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
             raise
 
+        print(f"[{datetime.now()}] Sleeping until next fetch at {fetch_time + TIMESTEP}")
         # wait until next 15-minute interval
         sleep(TIMESTEP.total_seconds())

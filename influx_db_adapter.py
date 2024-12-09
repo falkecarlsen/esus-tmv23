@@ -99,7 +99,7 @@ def ingest(df: pd.DataFrame, mapping: pd.DataFrame, verbose=False):
 
     def dataframe_to_influxdb_points(dataframe: pd.DataFrame):
         for _, row in dataframe.iterrows():
-            map_externallogid: Series = mapping.loc[row["externallogid"]]
+            map_externallogid: Series = mapping.loc[int(row["externallogid"])]
             yield (
                 Point(measurement_name="metric")
                 .tag("source", row["source"])
@@ -129,6 +129,6 @@ def ingest(df: pd.DataFrame, mapping: pd.DataFrame, verbose=False):
                               f"time left estimated: {(datetime.now() - time_computation) / i * (len(df) - i)}")
 
             time_write = datetime.now()
-            print(f"\nTime to write points: {time_write - time_computation}")
+            print(f"\nTime to write {i} points: {time_write - time_computation}")
 
     print(f"Total time spent on dataset: {time_write - time_start}")

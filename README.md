@@ -11,7 +11,6 @@ Example of visualisation of production data in Grafana from BMS API:
 # TODO:
 - Finalise `influx_db_adapter.py`
     - Mapping of measurements are broken
-- Write wrapper around improved BMS API and influx_db_adapter
 - Provision Strato instance
     - Setup docker
     - Deploy InfluxDB+Grafana docker-compose

@@ -70,6 +70,9 @@ def api(start: datetime, end: datetime, output: str, run: str = "bms"):
     def fetch(url: str, params: dict, username: str, password: str) -> requests.Response | None:
         status_code = 0
         tries = 0
+        assert username is not None
+        assert password is not None
+
         while status_code != requests.status_codes.codes.OK:
             payload = requests.get(url, params=params, auth=(username, password))
             status_code = payload.status_code
@@ -266,4 +269,5 @@ def api(start: datetime, end: datetime, output: str, run: str = "bms"):
 
 
 if __name__ == "__main__":
-    api(datetime.now() - timedelta(hours=1), datetime.now(), "output/tmv23-3days+1hr.csv")
+    #api(datetime.now() - timedelta(hours=1), datetime.now(), "output/tmv23-3days+1hr.csv")
+    api(datetime.now() - timedelta(days=3), datetime.now() - timedelta(hours=3), "output/tmv23-weekend-1.csv")
