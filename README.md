@@ -17,6 +17,13 @@ Example of visualisation of production data in Grafana from BMS API:
     - Setup cronjob-ish wrapper to poll BMS API and ingest into InfluxDB
     - Expose endpoints through Nginx for consumption
 
+# Prod setup
+- Assumes standard Ubuntu 24.04 VM (use e.g. Strato)
+- View paths in systemd/esus-wrapper.service
+    - Copy service to `/etc/systemd/system/esus-wrapper.service` on VM 
+- Setup venv according to `requirements.txt`
+- `systemctl enable --now esus-wrapper`
+
 # Performance
 - Reading from BMS API all measurements for one day takes ~1m20s
 - Writing transformed points to local InfluxDB instance takes 16s to precompute, and 10s (preliminary) to write to db.

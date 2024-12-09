@@ -1,0 +1,16 @@
+[Unit]
+Description=Persistent ESUS wrapper
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ubuntu/prod
+ExecStart=/home/ubuntu/prod/venv/bin/python wrapper.py
+Restart=always
+RestartSec=30
+User=ubuntu
+StandardOutput=append:/home/ubuntu/prod/wrapper.out
+StandardError=append:/home/ubuntu/prod/wrapper.err
+
+[Install]
+WantedBy=multi-user.target
