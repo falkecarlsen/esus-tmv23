@@ -15,10 +15,11 @@ Example of visualisation of production data in Grafana from BMS API:
 
 # Prod setup
 - Assumes standard Ubuntu 24.04 VM (use e.g. Strato)
-- View paths in systemd/esus-wrapper.service
+- Assumes paths used in `systemd/esus-wrapper.service`
     - Copy service to `/etc/systemd/system/esus-wrapper.service` on VM 
 - Setup venv according to `requirements.txt`
-- `systemctl enable --now esus-wrapper`
+- Setup docker and `docker compose up -d` to start InfluxDB and Grafana
+- Start+enable the wrapper `systemctl enable --now esus-wrapper`
 
 # Performance
 - Reading from BMS API all measurements for one day takes ~1m20s
