@@ -9,9 +9,12 @@ Example of visualisation of production data in Grafana from BMS API:
 
 
 # TODO:
+- Fixup wrapper.out emission from systemd service
+- Map missing externallogids: {696837, 696838, 696840, 696841, 696842, 730988}
 - Improve reliability of BMS API
     - Failed externallogids seems to increase with wider timeframe in request (?!?). We have seen the reverse be true before.
 - Implement method for gathering some timedelta back with error-handling to ensure integrity within the timeframe.
+    - Requires some form of missing value detection with variable sampling-frequency time data. PoC: Just do upper bound of reasonable frame.
 
 # Prod setup
 - Assumes standard Ubuntu 24.04 VM (use e.g. Strato)
