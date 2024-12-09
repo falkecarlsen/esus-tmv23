@@ -9,13 +9,9 @@ Example of visualisation of production data in Grafana from BMS API:
 
 
 # TODO:
-- Finalise `influx_db_adapter.py`
-    - Mapping of measurements are broken
-- Provision Strato instance
-    - Setup docker
-    - Deploy InfluxDB+Grafana docker-compose
-    - Setup cronjob-ish wrapper to poll BMS API and ingest into InfluxDB
-    - Expose endpoints through Nginx for consumption
+- Improve reliability of BMS API
+    - Failed externallogids seems to increase with wider timeframe in request (?!?). We have seen the reverse be true before.
+- Implement method for gathering some timedelta back with error-handling to ensure integrity within the timeframe.
 
 # Prod setup
 - Assumes standard Ubuntu 24.04 VM (use e.g. Strato)
