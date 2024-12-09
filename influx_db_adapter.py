@@ -2,6 +2,7 @@
 How to check that connection credentials are suitable for queries and writes from/into specified bucket.
 """
 import os
+import sys
 from pprint import pprint
 
 import influxdb_client
@@ -97,9 +98,14 @@ def ingest(df: pd.DataFrame, mapping: pd.DataFrame, verbose=False):
     print(f"Time pre-process dataset: {time_computation - time_start}")
 
 
+    missed_externallogid = set()
     def dataframe_to_influxdb_points(dataframe: pd.DataFrame):
         for _, row in dataframe.iterrows():
-            map_externallogid: Series = mapping.loc[int(row["externallogid"])]
+            try:
+                map_externallogid: Series = mapping.loc[int(row["externallogid"])]
+            except KeyError:
+                missed_externallogid.add(row["externallogid"])
+                continue
             yield (
                 Point(measurement_name="metric")
                 .tag("source", row["source"])
@@ -132,3 +138,5 @@ def ingest(df: pd.DataFrame, mapping: pd.DataFrame, verbose=False):
             print(f"\nTime to write {i} points: {time_write - time_computation}")
 
     print(f"Total time spent on dataset: {time_write - time_start}")
+    if missed_externallogid:
+        print(f"WARN: Missed externallogid: {missed_externallogid}", file=sys.stderr)

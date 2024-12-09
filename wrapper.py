@@ -23,12 +23,13 @@ def find_last_fetch_filename():
     for file in os.listdir(SAVE_LOC):
         if file.endswith(".csv"):
             # assuming ISO8601 format with no timezone
-            file_time = datetime.fromisoformat('.'.join(file.split('.')[:-1]))
+            file_time = datetime.fromisoformat(".".join(file.split(".")[:-1]))
             if last_fetch_time is None or file_time >= last_fetch_time:
                 last_fetch_time = file_time
                 last_fetch_path = file
 
     return last_fetch_path
+
 
 """
 - for each timestep is 15 minutes
@@ -46,6 +47,7 @@ if __name__ == "__main__":
     mapping = pd.read_csv(MAPPING_PATH).set_index("externallogid").drop(columns="Unnamed: 0")
 
     while True:
+        print(f"[{datetime.now()}] Starting fetch loop")
         # catch and report ex, but keep running
         try:
             fetch_time = datetime.now()
@@ -59,37 +61,40 @@ if __name__ == "__main__":
             backoff = 1
             no_improvement_count = 0
             while len(failed_logs) > 0:
-                print(f"[{fetch_time}] Fetching data from BMS API {backoff=} duration of fetch: {FETCH_TIME_OVERLAP * backoff}")
-                failed_logs = api(fetch_time - FETCH_TIME_OVERLAP + timedelta(hours=1) * backoff, fetch_time, fetch_path)
+                print(
+                    f"[{fetch_time}] Fetching data from BMS API {backoff=} duration of fetch: {FETCH_TIME_OVERLAP * backoff}"
+                )
+                failed_logs = api(
+                    fetch_time - FETCH_TIME_OVERLAP + timedelta(hours=1) * backoff, fetch_time, fetch_path
+                )
                 backoff += 1
-                print(f"Failed logs: {len(failed_logs)}", file=sys.stderr)
+                print(f"[{datetime.now()}] Failed logs: {len(failed_logs)}, {failed_logs=}", file=sys.stderr)
                 if len(failed_logs) == 0:
                     print(f"[{fetch_time}] Fetch successful")
                 else:
                     no_improvement_count += 1
-                    if no_improvement_count > 5:
+                    if no_improvement_count > 0:
                         print(f"[{fetch_time}] WARN: No improvement in fetch, exiting", file=sys.stderr)
                         break
 
-
             if last_fetch_path is None:
-                print(f"[{fetch_time}] WARN: Last fetch not found, no dedupe available. OK if first run.", file=sys.stderr)
+                print(
+                    f"[{fetch_time}] WARN: Last fetch not found, no dedupe available. OK if first run.", file=sys.stderr
+                )
                 fetch_res = pd.read_csv(fetch_path)
             else:
                 print(f"[{fetch_time}] Last fetch found: {last_fetch_path}")
                 deduped_csv = f"{SAVE_LOC}/dedupe/deduped_{fetch_time}.csv"
-                # subtract the last fetch from the current fetch
                 fetch_old = pd.read_csv(f"{SAVE_LOC}/{last_fetch_path}")
                 fetch_new = pd.read_csv(fetch_path)
-                fetch_res = fetch_new[~fetch_new.isin(fetch_old)].dropna()
-
+                # deduplicate by subtracting last fetch from the current fetch
+                fetch_res = pd.concat([fetch_new, fetch_old]).drop_duplicates(keep=False)
 
             # import resulting fetch into influxdb
             if fetch_res is not None and not fetch_res.empty:
                 ingest(fetch_res, mapping)
             else:
-                print(f"[{fetch_time}] WARN: No new data to ingest", file=sys.stderr)
-
+                print(f"[{datetime.now()}] WARN: No new data to ingest as fetch_res is None/empty", file=sys.stderr)
 
         except Exception as e:
             print(f"Error: {e}", file=sys.stderr)
