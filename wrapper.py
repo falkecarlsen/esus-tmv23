@@ -41,6 +41,9 @@ def find_last_fetch_filename():
 if __name__ == "__main__":
     print(f"[{datetime.now()}] Starting ESUS-wrapper")
 
+    from pathlib import Path
+    Path(SAVE_LOC).mkdir(parents=True, exist_ok=True)
+
     # load mapping once per run
     mapping = pd.read_csv(MAPPING_PATH).set_index("externallogid").drop(columns="Unnamed: 0")
 
