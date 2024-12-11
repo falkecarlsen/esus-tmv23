@@ -73,8 +73,8 @@ def api(start: datetime, end: datetime, output: str, run: str = "bms"):
     def fetch(url: str, params: dict, username: str, password: str) -> requests.Response | None:
         status_code = 0
         tries = 0
-        assert username is not None
-        assert password is not None
+        assert username is not None, "requires creds to run API, check your .env file"
+        assert password is not None, "requires creds to run API, check your .env file"
 
         while status_code != requests.status_codes.codes.OK:
             payload = requests.get(url, params=params, auth=(username, password))
