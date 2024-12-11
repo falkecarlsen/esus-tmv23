@@ -11,10 +11,7 @@ Example of visualisation of production data in Grafana from BMS API:
 # TODO:
 - Fixup wrapper.out emission from systemd service
 - Map missing externallogids: {696837, 696838, 696840, 696841, 696842, 730988}
-- Improve reliability of BMS API
-    - Failed externallogids seems to increase with wider timeframe in request (?!?). We have seen the reverse be true before.
-- Implement method for gathering some timedelta back with error-handling to ensure integrity within the timeframe.
-    - Requires some form of missing value detection with variable sampling-frequency time data. PoC: Just do upper bound of reasonable frame.
+- Requires some form of missing value detection with variable sampling-frequency time data. PoC: Just do upper bound of reasonable frame.
 
 # Prod setup
 - Assumes standard Ubuntu 24.04 VM (use e.g. Strato)
@@ -25,7 +22,7 @@ Example of visualisation of production data in Grafana from BMS API:
 - Start+enable the wrapper `systemctl enable --now esus-wrapper`
 
 # Performance
-- Reading from BMS API all measurements for one day takes ~1m20s
+- Reading from BMS API all measurements for one day takes ~1m20s. On 4 core VM, reading 30 days takes ~30m.
 - Writing transformed points to local InfluxDB instance takes 16s to precompute, and 10s (preliminary) to write to db.
     - Extrapolating this means that we consume 1 time unit of computation per 1000 time units monitored. Polling once every 15 minutes (0/15/30/45 minutes + epsilon) can expose measurements as soon as they're available.
 
