@@ -6,15 +6,13 @@ import pandas as pd
 
 # use our bms api and influx adapter
 from bms_api_build_aau_dk_v1 import api
-from influx_db_adapter import ingest
+from influx_db_adapter import ingest, MAPPING_PATH
 
 RUN = "prod"
 SAVE_LOC = "prod_data"
 
 TIMESTEP = timedelta(minutes=15)
 FETCH_TIME_OVERLAP = timedelta(hours=8)  # worst case seen is 8hrs
-MAPPING_PATH = "resources/mapping.csv"
-
 
 def find_last_fetch_filename():
     # Find the most recent CSV file in the data directory
@@ -92,7 +90,7 @@ if __name__ == "__main__":
 
             # import resulting fetch into influxdb
             if fetch_res is not None and not fetch_res.empty:
-                ingest(fetch_res, mapping)
+                ingest(fetch_res, mapping, True)
             else:
                 print(f"[{datetime.now()}] WARN: No new data to ingest as fetch_res is None/empty", file=sys.stderr)
 

@@ -1,6 +1,7 @@
 """
 How to check that connection credentials are suitable for queries and writes from/into specified bucket.
 """
+
 import os
 import sys
 from pprint import pprint
@@ -13,6 +14,7 @@ from influxdb_client import Point
 import pandas as pd
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -20,14 +22,18 @@ from datetime import datetime
 
 from openpyxl.chart.series import Series
 
+
+MAPPING_PATH = "resources/mapping.csv"
+
+
 time_start = datetime.now()
 
 # assume default port for InfluxDB
 url = "http://localhost:8086"
 
-token = os.getenv('INFLUXDB_TOKEN')
-org = os.getenv('INFLUXDB_ORG')
-bucket = os.getenv('INFLUXDB_DATABASE')
+token = os.getenv("INFLUXDB_TOKEN")
+org = os.getenv("INFLUXDB_ORG")
+bucket = os.getenv("INFLUXDB_DATABASE")
 
 
 def check_connection(client):
@@ -97,8 +103,8 @@ def ingest(df: pd.DataFrame, mapping: pd.DataFrame, verbose=False):
     time_computation = datetime.now()
     print(f"Time pre-process dataset: {time_computation - time_start}")
 
-
     missed_externallogid = set()
+
     def dataframe_to_influxdb_points(dataframe: pd.DataFrame):
         for _, row in dataframe.iterrows():
             try:
@@ -116,7 +122,6 @@ def ingest(df: pd.DataFrame, mapping: pd.DataFrame, verbose=False):
                 .time((row["timestamp"]))
             )
 
-
     with InfluxDBClient(url=url, token=token, org=org) as client:
         # write points
         step = 100_000
@@ -130,9 +135,11 @@ def ingest(df: pd.DataFrame, mapping: pd.DataFrame, verbose=False):
                     if i % step == 0:
                         print(".", end="")
                     if i % (step * 5) == 0:
-                        print(f"\n{i / len(df):.3%} or {i}/{len(df)} points written, "
-                              f"time elapsed: {datetime.now() - time_computation}, "
-                              f"time left estimated: {(datetime.now() - time_computation) / i * (len(df) - i)}")
+                        print(
+                            f"\n{i / len(df):.3%} or {i}/{len(df)} points written, "
+                            f"time elapsed: {datetime.now() - time_computation}, "
+                            f"time left estimated: {(datetime.now() - time_computation) / i * (len(df) - i)}"
+                        )
 
             time_write = datetime.now()
             print(f"\nTime to write {i} points: {time_write - time_computation}")

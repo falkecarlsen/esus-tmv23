@@ -16,6 +16,8 @@ import time
 # load creds from '.env'
 from dotenv import load_dotenv
 
+from influx_db_adapter import check_connection, check_query, check_write, ingest, MAPPING_PATH
+
 load_dotenv()
 
 # API endpoints for the DB server
@@ -31,6 +33,7 @@ if not USERNAME:
     USERNAME = os.getenv("SE_API_USERNAME")
 if not PASSWORD:
     PASSWORD = os.getenv("SE_API_PASSWORD")
+
 
 def api(start: datetime, end: datetime, output: str, run: str = "bms"):
     DEBUG_API = False
@@ -88,8 +91,6 @@ def api(start: datetime, end: datetime, output: str, run: str = "bms"):
 
             else:
                 return payload
-
-
 
     ###############################
 
@@ -269,5 +270,22 @@ def api(start: datetime, end: datetime, output: str, run: str = "bms"):
 
 
 if __name__ == "__main__":
-    #api(datetime.now() - timedelta(hours=1), datetime.now(), "output/tmv23-3days+1hr.csv")
-    api(datetime.now() - timedelta(days=3), datetime.now() - timedelta(hours=3), "output/tmv23-weekend-1.csv")
+    from wrapper import SAVE_LOC
+
+    filename = f"{SAVE_LOC}/{datetime.now().__str__().replace(" ", "_")}.csv"
+    start = datetime.now() - timedelta(days=30)
+    end = datetime.now() - timedelta(days=3)
+    choice = input(
+        f"Do you want to fetch and ingest (duration: {end - start}) the data to InfluxDB? "
+        f"Beware duplicate points may be recorded! (y/n): "
+    )
+    api(start, end, filename)
+    # ask for input whether to directly import to .env defined InfluxDB
+    if choice.lower() == "y":
+        start_time = datetime.now()
+        mapping = pd.read_csv(MAPPING_PATH).set_index("externallogid").drop(columns="Unnamed: 0")
+        ingest(pd.read_csv(filename), mapping, True)
+        print(f"Time to ingest: {datetime.now() - start_time}")
+    else:
+        print("Exiting")
+        exit(0)
