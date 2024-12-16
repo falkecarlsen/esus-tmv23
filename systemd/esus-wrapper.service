@@ -4,13 +4,14 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/ubuntu/prod
-ExecStart=/home/ubuntu/prod/venv/bin/python wrapper.py
+WorkingDirectory=/home/ubuntu/esus-tmv23
+ExecStart=/home/ubuntu/esus-tmv23/venv/bin/python wrapper.py
 Restart=always
-RestartSec=30
+RestartSec=10
 User=ubuntu
-StandardOutput=append:/home/ubuntu/prod/wrapper.out
-StandardError=append:/home/ubuntu/prod/wrapper.err
+StandardOutput=append:/home/ubuntu/esus-tmv23/std.out
+StandardError=append:/home/ubuntu/esus-tmv23/std.err
 
 [Install]
 WantedBy=multi-user.target
+
