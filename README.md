@@ -5,7 +5,7 @@ The goal is to synthesise control strategies (Imran papers) for a subset of the 
 Presumed savings are among others from utilising weather forecasts and preemptively lowering shades in morning on sunny days to save cooling costs on south-facing rooms. Currently, these shades are not tied into the main BMS and are only controlled by human interaction.
 
 Example of visualisation of production data in Grafana from BMS API:
-![alpha_dashboard](figures/alpha_dashboard.png)
+![beta_dashboard](figures/beta_dashboard.png)
 
 
 # TODO:
