@@ -21,6 +21,7 @@ Example of visualisation of production data in Grafana from BMS API:
 - Setup venv according to `requirements.txt`, e.g. `python3 -m venv venv`
 - Setup docker (enable the systemd service) and `docker compose up -d` to start InfluxDB and Grafana
 - Start+enable the wrapper `systemctl enable --now esus-wrapper`
+- For exposing Grafana install `nginx` and copy `nginx/grafana` config to `/etc/nginx/sites-available/grafana`, activate the site within nginx, then start and enable the nginx systemd service for persistence
 
 # Performance
 - Reading from BMS API all measurements for one day takes ~1m20s. On 4 core VM, reading 30 days takes ~30m.
